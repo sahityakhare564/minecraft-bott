@@ -156,7 +156,7 @@ async def status_command(interaction: discord.Interaction):
  
 # ─── Auto updater (every 30 sec) ──────────────────────────────
  
-@tasks.loop(seconds=30)
+@tasks.loop(seconds=120)
 async def update_status():
     global status_message
  
