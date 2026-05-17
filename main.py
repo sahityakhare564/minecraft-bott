@@ -12,7 +12,7 @@ import os
 # ============================================================
 MINECRAFT_IP   = "play.shivxtreme.fun"   # e.g. "play.hypixel.net"
 MINECRAFT_PORT = 19132               # default Minecraft port
-DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")   # paste your bot token here
+DISCORD_TOKEN = "apna_token_yahan"   # paste your bot token here
 # ============================================================
  
 # Right-click your channel → Copy Channel ID (need Developer Mode on in Discord settings)
