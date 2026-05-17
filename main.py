@@ -144,7 +144,7 @@ async def update_status():
  
     channel = client.get_channel(STATUS_CHANNEL_ID)
     if channel is None:
-        print(f"❌ Could not find channel ID {TATUS_CHANNEL_ID}")
+        print(f"❌ Could not find channel ID {STATUS_CHANNEL_ID}")
         return
  
     info  = ping_minecraft(MINECRAFT_IP, MINECRAFT_PORT)
