@@ -12,7 +12,7 @@ import os
 # ============================================================
 MINECRAFT_IP   = "play.shivxtreme.fun"   # e.g. "play.hypixel.net"
 MINECRAFT_PORT = 19132               # default Minecraft port
-DISCORD_TOKEN = "apna_token_yahan"   # paste your bot token here
+DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")   # paste your bot token here
 # ============================================================
  
 # Right-click your channel → Copy Channel ID (need Developer Mode on in Discord settings)
@@ -113,7 +113,7 @@ def build_embed(info):
     if info["motd"]:
         embed.add_field(name="📋 MOTD", value=info["motd"], inline=False)
  
-    embed.set_footer(text=f"Updates every 60 sec • Last checked: {time.strftime('%H:%M:%S')}")
+    embed.set_footer(text=f"Updates every 30 sec • Last checked: {time.strftime('%H:%M:%S')}")
     return embed
  
  
@@ -121,24 +121,42 @@ def build_embed(info):
  
 intents = discord.Intents.default()
 client  = discord.Client(intents=intents)
-tree    = app_commands.CommandTree(client)  # needed for slash commands
+tree    = app_commands.CommandTree(client)
  
 status_message = None
+ 
+# Render pe /tmp temporary hai lekin restart ke beech kaam karta hai
+MESSAGE_ID_FILE = "/tmp/status_message_id.txt"
+ 
+ 
+def save_message_id(msg_id: int):
+    """Message ID ko file me save karo taaki restart ke baad bhi mile"""
+    with open(MESSAGE_ID_FILE, "w") as f:
+        f.write(str(msg_id))
+ 
+ 
+def load_message_id():
+    """File se pehle wala message ID load karo"""
+    try:
+        with open(MESSAGE_ID_FILE, "r") as f:
+            return int(f.read().strip())
+    except Exception:
+        return None
  
  
 # ─── /status slash command ────────────────────────────────────
  
 @tree.command(name="status", description="Check the Minecraft server status right now")
 async def status_command(interaction: discord.Interaction):
-    await interaction.response.defer()  # shows "Bot is thinking..." while pinging
+    await interaction.response.defer()
     info  = ping_minecraft(MINECRAFT_IP, MINECRAFT_PORT)
     embed = build_embed(info)
     await interaction.followup.send(embed=embed)
  
  
-# ─── Auto updater (every 60 sec) ──────────────────────────────
+# ─── Auto updater (every 30 sec) ──────────────────────────────
  
-@tasks.loop(seconds=60)
+@tasks.loop(seconds=30)
 async def update_status():
     global status_message
  
@@ -151,12 +169,33 @@ async def update_status():
     embed = build_embed(info)
  
     try:
+        # Memory me nahi hai? File se ID load karke Discord se fetch karo
         if status_message is None:
+            saved_id = load_message_id()
+            if saved_id:
+                try:
+                    status_message = await channel.fetch_message(saved_id)
+                    print(f"✅ Purana message mil gaya (ID: {saved_id}), ab edit hoga")
+                except discord.NotFound:
+                    print("⚠️ Purana message delete ho chuka tha, naya bana raha hu...")
+                    status_message = None
+ 
+        if status_message is None:
+            # Pehli baar ya message delete ho gaya — sirf tab naya bhejo
             status_message = await channel.send(embed=embed)
+            save_message_id(status_message.id)
+            print(f"📨 Naya status message bheja (ID: {status_message.id})")
         else:
+            # Bas edit karo — koi naya message nahi
             await status_message.edit(embed=embed)
+ 
     except discord.NotFound:
+        # Message manually delete ho gaya beech me
         status_message = await channel.send(embed=embed)
+        save_message_id(status_message.id)
+        print(f"📨 Message delete tha, naya bheja (ID: {status_message.id})")
+    except Exception as e:
+        print(f"❌ Update error: {e}")
  
     state = "ONLINE" if info["online"] else "OFFLINE"
     print(f"[{time.strftime('%H:%M:%S')}] Server is {state} — {info.get('players_online', 0)} players")
@@ -164,7 +203,7 @@ async def update_status():
  
 @client.event
 async def on_ready():
-    await tree.sync()  # registers /status with Discord
+    await tree.sync()
     print(f"✅ Logged in as {client.user}")
     print(f"   Monitoring: {MINECRAFT_IP}:{MINECRAFT_PORT}")
     print(f"   Slash command /status is ready!")
