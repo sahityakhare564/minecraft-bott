@@ -16,7 +16,7 @@ DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")   # paste your bot token here
 # ============================================================
  
 # Right-click your channel → Copy Channel ID (need Developer Mode on in Discord settings)
-STATUS_CHANNEL_ID = #  # <-- replace with your channel ID
+STATUS_CHANNEL_ID = 1565658810052  # <-- replace with your channel ID
  
  
 def ping_minecraft(host, port, timeout=5):
