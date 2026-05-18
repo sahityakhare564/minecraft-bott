@@ -25,6 +25,44 @@ def clean_motd(text):
     return re.sub(r'§.', '', str(text)).strip()
  
  
+# ─── Java se sirf player names lene ki koshish ───────────────
+def get_java_player_names(host, port, timeout=3):
+    try:
+        sock = socket.create_connection((host, port), timeout=timeout)
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        host_bytes = host.encode("utf-8")
+        data = b"\x00\x00" + struct.pack(">B", len(host_bytes)) + host_bytes + struct.pack(">H", port) + b"\x01"
+        sock.send(struct.pack(">B", len(data)) + data)
+        sock.send(b"\x01\x00")
+ 
+        def read_varint(s):
+            result, shift = 0, 0
+            while True:
+                byte = s.recv(1)
+                if not byte:
+                    return 0
+                b = byte[0]
+                result |= (b & 0x7F) << shift
+                shift += 7
+                if not (b & 0x80):
+                    return result
+ 
+        read_varint(sock)
+        read_varint(sock)
+        str_len = read_varint(sock)
+        raw = b""
+        while len(raw) < str_len:
+            chunk = sock.recv(str_len - len(raw))
+            if not chunk:
+                break
+            raw += chunk
+        sock.close()
+        info = json.loads(raw.decode("utf-8"))
+        return [p.get("name", "Unknown") for p in info.get("players", {}).get("sample", [])]
+    except Exception:
+        return []
+ 
+ 
 # ─── Ping (Bedrock UDP → Java TCP fallback) ───────────────────
 def ping_minecraft(host, port, timeout=5):
  
@@ -54,11 +92,14 @@ def ping_minecraft(host, port, timeout=5):
         players_max    = int(parts[5]) if len(parts) > 5 else 0
         full_motd      = f"{motd} | {sub_motd}" if sub_motd else motd
  
+        # Saath me Java TCP se player names bhi try karo
+        java_players = get_java_player_names(host, port)
+ 
         return {
             "online": True,
             "players_online": players_online,
             "players_max": players_max,
-            "player_list": [],
+            "player_list": java_players,
             "motd": full_motd,
         }
  
@@ -136,7 +177,7 @@ def build_embed(info):
     embed = discord.Embed(
         title="🟢  Minecraft Server — ONLINE",
         description=f"`{MINECRAFT_IP}:{MINECRAFT_PORT}`",
-        color=discord.Color.red(),   # ← RED color
+        color=discord.Color.yellow(),   # ← RED color
     )
     embed.add_field(name="👥 Players", value=f"**{players} / {max_p}**", inline=True)
  
