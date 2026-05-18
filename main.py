@@ -113,7 +113,7 @@ def build_embed(info):
     if info["motd"]:
         embed.add_field(name="📋 MOTD", value=info["motd"], inline=False)
  
-    embed.set_footer(text=f"Updates every 30 sec • Last checked: {time.strftime('%H:%M:%S')}")
+    embed.set_footer(text=f"Updates every 120 sec • Last checked: {time.strftime('%H:%M:%S')}")
     return embed
  
  
