@@ -7,6 +7,8 @@ import json
 import time
 import os
 import re
+import asyncio
+import random
  
 # ============================================================
 #   EDIT THESE 3 THINGS ONLY
@@ -19,13 +21,17 @@ DISCORD_TOKEN  = os.environ.get("DISCORD_TOKEN")
 STATUS_CHANNEL_ID = 1439258136278995026
 MESSAGE_ID_FILE   = "/tmp/status_message_id.txt"
  
+# Sirf yeh role wale /hack use kar sakte hain (Admin/Owner)
+# Agar koi bhi use kar sake toh is list ko empty rakho: ALLOWED_ROLES = []
+ALLOWED_ROLES = ["Admin", "Owner", "Moderator"]
  
-# ─── MOTD cleaner (§a §l jaise color codes hatao) ─────────────
+ 
+# ─── MOTD cleaner ─────────────────────────────────────────────
 def clean_motd(text):
     return re.sub(r'§.', '', str(text)).strip()
  
  
-# ─── Java se sirf player names lene ki koshish ───────────────
+# ─── Java player names ────────────────────────────────────────
 def get_java_player_names(host, port, timeout=3):
     try:
         sock = socket.create_connection((host, port), timeout=timeout)
@@ -65,8 +71,6 @@ def get_java_player_names(host, port, timeout=3):
  
 # ─── Ping (Bedrock UDP → Java TCP fallback) ───────────────────
 def ping_minecraft(host, port, timeout=5):
- 
-    # ── Bedrock UDP ping ──────────────────────────────────────
     try:
         UNCONNECTED_PING = (
             b'\x01'
@@ -80,20 +84,15 @@ def ping_minecraft(host, port, timeout=5):
         data, _ = sock.recvfrom(4096)
         sock.close()
  
-        # Skip: 1 (ID) + 8 (time) + 8 (guid) + 16 (magic) + 2 (str len)
         offset  = 1 + 8 + 8 + 16 + 2
         raw_str = data[offset:].decode("utf-8", errors="ignore")
- 
-        # Format: MCPE;MOTD;protocol;version;players;max;serverid;sub_motd;...
         parts          = raw_str.split(";")
         motd           = clean_motd(parts[1]) if len(parts) > 1 else ""
         sub_motd       = clean_motd(parts[7]) if len(parts) > 7 else ""
         players_online = int(parts[4]) if len(parts) > 4 else 0
         players_max    = int(parts[5]) if len(parts) > 5 else 0
         full_motd      = f"{motd} | {sub_motd}" if sub_motd else motd
- 
-        # Saath me Java TCP se player names bhi try karo
-        java_players = get_java_player_names(host, port)
+        java_players   = get_java_player_names(host, port)
  
         return {
             "online": True,
@@ -102,15 +101,12 @@ def ping_minecraft(host, port, timeout=5):
             "player_list": java_players,
             "motd": full_motd,
         }
- 
     except Exception:
-        pass  # Bedrock fail → Java try karo
+        pass
  
-    # ── Java TCP ping (fallback) ──────────────────────────────
     try:
         sock = socket.create_connection((host, port), timeout=timeout)
         sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
- 
         host_bytes = host.encode("utf-8")
         data = b"\x00\x00" + struct.pack(">B", len(host_bytes)) + host_bytes + struct.pack(">H", port) + b"\x01"
         sock.send(struct.pack(">B", len(data)) + data)
@@ -131,7 +127,6 @@ def ping_minecraft(host, port, timeout=5):
         read_varint(sock)
         read_varint(sock)
         str_len = read_varint(sock)
- 
         raw = b""
         while len(raw) < str_len:
             chunk = sock.recv(str_len - len(raw))
@@ -154,7 +149,6 @@ def ping_minecraft(host, port, timeout=5):
             "player_list": player_list,
             "motd": motd,
         }
- 
     except Exception:
         return {"online": False}
  
@@ -177,7 +171,7 @@ def build_embed(info):
     embed = discord.Embed(
         title="🟢  Minecraft Server — ONLINE",
         description=f"`{MINECRAFT_IP}:{MINECRAFT_PORT}`",
-        color=discord.Color.yellow(),   # ← RED color
+        color=discord.Color.red(),
     )
     embed.add_field(name="👥 Players", value=f"**{players} / {max_p}**", inline=True)
  
@@ -216,7 +210,7 @@ def load_message_id():
         return None
  
  
-# ─── /status slash command ────────────────────────────────────
+# ─── /status command ──────────────────────────────────────────
 @tree.command(name="status", description="Check the Minecraft server status right now")
 async def status_command(interaction: discord.Interaction):
     await interaction.response.defer()
@@ -225,7 +219,113 @@ async def status_command(interaction: discord.Interaction):
     await interaction.followup.send(embed=embed)
  
  
-# ─── Auto updater (every 30 sec) ──────────────────────────────
+# ─── /hack command 😈 ─────────────────────────────────────────
+@tree.command(name="sudo_rm_rf", description="⚠️ [ADMIN ONLY] System maintenance tool")
+async def sudo_rm_rf_command(interaction: discord.Interaction):
+ 
+    # Role check — sirf allowed roles use kar sakte hain
+    if ALLOWED_ROLES:
+        user_roles = [r.name for r in interaction.user.roles]
+        if not any(role in user_roles for role in ALLOWED_ROLES):
+            await interaction.response.send_message(
+                "❌ Tere paas permission nahi hai is command ki!", ephemeral=True
+            )
+            return
+ 
+    await interaction.response.defer()
+ 
+    fake_ips = [
+        "185.234.218.51", "103.45.67.12", "92.168.1.103",
+        "77.88.55.66", "198.51.100.42", "203.0.113.99"
+    ]
+    fake_usernames = [
+        "xX_H4CK3R_Xx", "D4RKN3T_B0T", "R00T_ACCESS",
+        "ANON_GHOST", "CYB3R_CR1M3", "SKID_LORD_69"
+    ]
+    hacker_ip   = random.choice(fake_ips)
+    hacker_name = random.choice(fake_usernames)
+ 
+    # Phase 1 — Command triggered
+    embed1 = discord.Embed(
+        title="💻  EXECUTING: `sudo rm -rf /*`",
+        description=(
+            "```bash\n"
+            "root@shivxtreme:~# sudo rm -rf /*\n"
+            "[sudo] password for root: ••••••••\n"
+            "Initializing...\n"
+            "```"
+        ),
+        color=0x2C2F33
+    )
+    embed1.set_footer(text="ShivXtreme SMP — System Terminal v1.0")
+    msg = await interaction.followup.send(embed=embed1)
+ 
+    await asyncio.sleep(2)
+ 
+    # Phase 2 — Deleting files
+    embed2 = discord.Embed(
+        title="⚠️  DELETING SYSTEM FILES...",
+        description=(
+            "```bash\n"
+            "removing /bin/sh...          [ DELETED ]\n"
+            "removing /etc/passwd...      [ DELETED ]\n"
+            "removing /var/minecraft...   [ DELETED ]\n"
+            "removing /home/players...    [ DELETED ]\n"
+            "removing /world/data...      [ DELETED ]\n"
+            "removing /plugins...         [ DELETED ]\n"
+            "⚠️  WARNING: Cannot stop process!\n"
+            "```"
+        ),
+        color=0xFF6600
+    )
+    embed2.add_field(name="📂 Files Deleted", value=f"`{random.randint(1000,5000)}`", inline=True)
+    embed2.add_field(name="💾 Storage Lost",  value=f"`{random.randint(10,99)} GB`",  inline=True)
+    embed2.add_field(name="⏳ ETA",           value="`calculating...`",               inline=True)
+    embed2.set_footer(text="Process cannot be killed — PID 666")
+    await msg.edit(embed=embed2)
+ 
+    await asyncio.sleep(2)
+ 
+    # Phase 3 — Critical system failure
+    embed3 = discord.Embed(
+        title="💀  CRITICAL SYSTEM FAILURE",
+        description=(
+            "```diff\n"
+            "- [PANIC] Kernel modules destroyed!\n"
+            "- [PANIC] Player data: WIPED\n"
+            "- [PANIC] World files: CORRUPTED\n"
+            "- [PANIC] Server config: GONE\n"
+            "- [FATAL] System is going down NOW!\n"
+            "\n"
+            "- Segmentation fault (core dumped)\n"
+            "```"
+        ),
+        color=0xFF0000
+    )
+    embed3.add_field(name="🌐 Server IP",      value=f"~~`{MINECRAFT_IP}`~~ `OFFLINE`", inline=False)
+    embed3.add_field(name="👾 Executed by",    value=f"`{hacker_name}` @ `{hacker_ip}`", inline=True)
+    embed3.add_field(name="💣 Damage Level",   value="☠️ IRREVERSIBLE",                  inline=True)
+    embed3.add_field(name="⏳ Recovery Time",  value="**NEVER** 💀",                     inline=False)
+    embed3.set_footer(text="RIP ShivXtreme SMP 2024-2025 🪦")
+    await msg.edit(embed=embed3)
+ 
+    await asyncio.sleep(4)
+ 
+    # Phase 4 — GOTCHA 😂
+    embed4 = discord.Embed(
+        title="LMAO GOTCHA YOU!",
+        description="gotchu guys every thing is totally fine 😂",
+        color=0x00FF00
+    )
+    embed4.add_field(name="✅ Server",       value="100% Online & Safe",        inline=True)
+    embed4.add_field(name="💾 Files",        value="Sab intact hain 😂",        inline=True)
+    embed4.add_field(name="🎭 Pranked by",   value=interaction.user.mention,    inline=False)
+    embed4.add_field(name="☠️ Troll Level",  value="█████████░ 90%",            inline=False)
+    embed4.set_footer(text="ShivXtreme SMP — sudo rm -rf ur brain 😈")
+    await msg.edit(embed=embed4)
+ 
+ 
+# ─── Auto updater ─────────────────────────────────────────────
 @tasks.loop(seconds=60)
 async def update_status():
     global status_message
@@ -275,4 +375,3 @@ async def on_ready():
  
  
 client.run(DISCORD_TOKEN)
- 
