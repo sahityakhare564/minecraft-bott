@@ -18,7 +18,7 @@ MINECRAFT_PORT = 19132
 DISCORD_TOKEN  = os.environ.get("DISCORD_TOKEN")
 # ============================================================
  
-STATUS_CHANNEL_ID = 
+STATUS_CHANNEL_ID = 1439258136278995026
 MESSAGE_ID_FILE   = "/tmp/status_message_id.txt"
  
 # Sirf yeh role wale /hack use kar sakte hain (Admin/Owner)
