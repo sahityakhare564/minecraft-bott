@@ -23,7 +23,7 @@ MESSAGE_ID_FILE   = "/tmp/status_message_id.txt"
  
 # Sirf yeh role wale /hack use kar sakte hain (Admin/Owner)
 # Agar koi bhi use kar sake toh is list ko empty rakho: ALLOWED_ROLES = []
-ALLOWED_ROLES = ["╭───𒌋𒀖 「🜲・ ᗰOᗪEᖇᗩTOᖇ」"]
+ALLOWED_ROLES = ["Admin", "Owner", "Moderator"]
  
  
 # ─── MOTD cleaner ─────────────────────────────────────────────
@@ -246,83 +246,62 @@ async def sudo_rm_rf_command(interaction: discord.Interaction):
     hacker_name = random.choice(fake_usernames)
  
     # Phase 1 — Command triggered
-    embed1 = discord.Embed(
-        title="💻  EXECUTING: `sudo rm -rf /*`",
-        description=(
-            "```bash\n"
-            "root@shivxtreme:~# sudo rm -rf /*\n"
-            "[sudo] password for root: ••••••••\n"
-            "Initializing...\n"
-            "```"
-        ),
-        color=0x2C2F33
-    )
-    embed1.set_footer(text="ShivXtreme SMP — System Terminal v1.0")
-    msg = await interaction.followup.send(embed=embed1)
+    msg = await interaction.followup.send("💻 `root@shivxtreme:~# sudo rm -rf /*`")
+    await asyncio.sleep(1)
  
+    await msg.edit(content=(
+        "💻 `root@shivxtreme:~# sudo rm -rf /*`\n"
+        "`[sudo] password for root: ••••••••`"
+    ))
+    await asyncio.sleep(1)
+ 
+    await msg.edit(content=(
+        "💻 `root@shivxtreme:~# sudo rm -rf /*`\n"
+        "`[sudo] password for root: ••••••••`\n"
+        "`Initializing... ⚙️`"
+    ))
     await asyncio.sleep(2)
  
-    # Phase 2 — Deleting files
-    embed2 = discord.Embed(
-        title="⚠️  DELETING SYSTEM FILES...",
-        description=(
-            "```bash\n"
-            "removing /bin/sh...          [ DELETED ]\n"
-            "removing /etc/passwd...      [ DELETED ]\n"
-            "removing /var/minecraft...   [ DELETED ]\n"
-            "removing /home/players...    [ DELETED ]\n"
-            "removing /world/data...      [ DELETED ]\n"
-            "removing /plugins...         [ DELETED ]\n"
-            "⚠️  WARNING: Cannot stop process!\n"
-            "```"
-        ),
-        color=0xFF6600
-    )
-    embed2.add_field(name="📂 Files Deleted", value=f"`{random.randint(1000,5000)}`", inline=True)
-    embed2.add_field(name="💾 Storage Lost",  value=f"`{random.randint(10,99)} GB`",  inline=True)
-    embed2.add_field(name="⏳ ETA",           value="`calculating...`",               inline=True)
-    embed2.set_footer(text="Process cannot be killed — PID 666")
-    await msg.edit(embed=embed2)
+    # Phase 2 — Deleting files one by one
+    files = [
+        "/bin/sh",
+        "/etc/passwd",
+        "/var/minecraft",
+        f"/home/players  ({random.randint(1000,5000)} files)",
+        "/world/data",
+        "/plugins",
+        "/server.properties",
+    ]
+    text = "⚠️ **DELETING SYSTEM FILES...**\n"
+    await msg.edit(content=text)
+    await asyncio.sleep(1)
  
-    await asyncio.sleep(2)
+    for f in files:
+        text += f"`removing {f}...` ❌ **[ DELETED ]**\n"
+        await msg.edit(content=text)
+        await asyncio.sleep(1)
  
-    # Phase 3 — Critical system failure
-    embed3 = discord.Embed(
-        title="💀  CRITICAL SYSTEM FAILURE",
-        description=(
-            "```diff\n"
-            "- [PANIC] Kernel modules destroyed!\n"
-            "- [PANIC] Player data: WIPED\n"
-            "- [PANIC] World files: CORRUPTED\n"
-            "- [PANIC] Server config: GONE\n"
-            "- [FATAL] System is going down NOW!\n"
-            "\n"
-            "- Segmentation fault (core dumped)\n"
-            "```"
-        ),
-        color=0xFF0000
-    )
-    embed3.add_field(name="🌐 Server IP",      value=f"~~`{MINECRAFT_IP}`~~ `OFFLINE`", inline=False)
-    embed3.add_field(name="👾 Executed by",    value=f"`{hacker_name}` @ `{hacker_ip}`", inline=True)
-    embed3.add_field(name="💣 Damage Level",   value="☠️ IRREVERSIBLE",                  inline=True)
-    embed3.add_field(name="⏳ Recovery Time",  value="**NEVER** 💀",                     inline=False)
-    embed3.set_footer(text="RIP ShivXtreme SMP 2024-2025 🪦")
-    await msg.edit(embed=embed3)
+    await asyncio.sleep(1)
  
+    # Phase 3 — Critical failure
+    await msg.edit(content=(
+        "💀 **CRITICAL SYSTEM FAILURE**\n"
+        "`[PANIC] Kernel modules destroyed!`\n"
+        "`[PANIC] Player data: WIPED`\n"
+        "`[PANIC] World files: CORRUPTED`\n"
+        "`[PANIC] Server config: GONE`\n"
+        "`[FATAL] System is going down NOW!`\n"
+        f"`Executed by: {hacker_name} @ {hacker_ip}`\n"
+        f"~~`{MINECRAFT_IP}`~~ → `OFFLINE` 💀\n"
+        "**RIP ShivXtreme SMP 🪦**"
+    ))
     await asyncio.sleep(4)
  
-    # Phase 4 — GOTCHA 😂
-    embed4 = discord.Embed(
-        title="LMAO GOTCHA YOU!",
-        description="gotchu guys every thing is totally fine 😂",
-        color=0x00FF00
-    )
-    embed4.add_field(name="✅ Server",       value="100% Online & Safe",        inline=True)
-    embed4.add_field(name="💾 Files",        value="Sab intact hain 😂",        inline=True)
-    embed4.add_field(name="🎭 Pranked by",   value=interaction.user.mention,    inline=False)
-    embed4.add_field(name="☠️ Troll Level",  value="█████████░ 90%",            inline=False)
-    embed4.set_footer(text="ShivXtreme SMP — sudo rm -rf ur brain 😈")
-    await msg.edit(embed=embed4)
+    # Phase 4 — GOTCHA
+    await msg.edit(content=(
+        f"😂 gotchu guys every thing is totally fine\n"
+        f"🎭 Pranked by {interaction.user.mention} 😈"
+    ))
  
  
 # ─── Auto updater ─────────────────────────────────────────────
