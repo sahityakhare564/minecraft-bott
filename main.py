@@ -23,7 +23,7 @@ MESSAGE_ID_FILE   = "/tmp/status_message_id.txt"
  
 # Sirf yeh role wale /hack use kar sakte hain (Admin/Owner)
 # Agar koi bhi use kar sake toh is list ko empty rakho: ALLOWED_ROLES = []
-ALLOWED_ROLES = ["╭───𒌋𒀖 「🜲・ ᗰOᗪEᖇᗩTOᖇ」", "Owner", "Moderator"]
+ALLOWED_ROLES = ["╭───𒌋𒀖 「🜲・ ᗰOᗪEᖇᗩTOᖇ」"]
  
  
 # ─── MOTD cleaner ─────────────────────────────────────────────
