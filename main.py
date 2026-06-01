@@ -11,22 +11,39 @@ import asyncio
 import random
  
 # ============================================================
-#   EDIT THESE 3 THINGS ONLY
+#   EDIT THESE
 # ============================================================
-MINECRAFT_IP   = "play.shivxtreme.fun"
-MINECRAFT_PORT = 19132
-DISCORD_TOKEN  = os.environ.get("DISCORD_TOKEN")
-# ============================================================
- 
+MINECRAFT_IP      = "play.shivxtreme.fun"
+MINECRAFT_PORT    = 19132
+DISCORD_TOKEN     = os.environ.get("DISCORD_TOKEN")
 STATUS_CHANNEL_ID = 1439258136278995026
-MESSAGE_ID_FILE   = "/tmp/status_message_id.txt"
  
-# Sirf yeh role wale /hack use kar sakte hain (Admin/Owner)
-# Agar koi bhi use kar sake toh is list ko empty rakho: ALLOWED_ROLES = []
-ALLOWED_ROLES = ["╭───𒌋𒀖 「🜲・ ᗰOᗪEᖇᗩTOᖇ」"]
+# ✅ True  = Coming Soon dikhega (maintenance mode)
+# ✅ False = Normal server status dikhega
+MAINTENANCE_MODE = True
+MAINTENANCE_MSG  = "Season 4 aa raha hai — aur bhi mast hoga! 🔥"
+ 
+# Sirf yeh roles /sudo_rm_rf use kar sakte hain
+ALLOWED_ROLES = ["Admin", "Owner", "Moderator"]
+# ============================================================
+ 
+MESSAGE_ID_FILE = "/tmp/status_message_id.txt"
  
  
-# ─── MOTD cleaner ─────────────────────────────────────────────
+# ─── Helpers ──────────────────────────────────────────────────
+def save_message_id(msg_id):
+    with open(MESSAGE_ID_FILE, "w") as f:
+        f.write(str(msg_id))
+ 
+ 
+def load_message_id():
+    try:
+        with open(MESSAGE_ID_FILE, "r") as f:
+            return int(f.read().strip())
+    except Exception:
+        return None
+ 
+ 
 def clean_motd(text):
     return re.sub(r'§.', '', str(text)).strip()
  
@@ -69,7 +86,7 @@ def get_java_player_names(host, port, timeout=3):
         return []
  
  
-# ─── Ping (Bedrock UDP → Java TCP fallback) ───────────────────
+# ─── Ping ─────────────────────────────────────────────────────
 def ping_minecraft(host, port, timeout=5):
     try:
         UNCONNECTED_PING = (
@@ -84,8 +101,8 @@ def ping_minecraft(host, port, timeout=5):
         data, _ = sock.recvfrom(4096)
         sock.close()
  
-        offset  = 1 + 8 + 8 + 16 + 2
-        raw_str = data[offset:].decode("utf-8", errors="ignore")
+        offset         = 1 + 8 + 8 + 16 + 2
+        raw_str        = data[offset:].decode("utf-8", errors="ignore")
         parts          = raw_str.split(";")
         motd           = clean_motd(parts[1]) if len(parts) > 1 else ""
         sub_motd       = clean_motd(parts[7]) if len(parts) > 7 else ""
@@ -155,6 +172,21 @@ def ping_minecraft(host, port, timeout=5):
  
 # ─── Embed builder ────────────────────────────────────────────
 def build_embed(info):
+ 
+    # Maintenance / Coming Soon
+    if MAINTENANCE_MODE:
+        embed = discord.Embed(
+            title="🚧  ShivXtreme SMP — Coming Soon!",
+            description="**We'll be back soon!** 🙏",
+            color=0xF1C40F
+        )
+        embed.add_field(name="⏳ Status",     value=MAINTENANCE_MSG,         inline=False)
+        embed.add_field(name="📢 Stay Tuned", value="Discord pe bane raho!", inline=False)
+        embed.add_field(name="🌐 Server",     value=f"`{MINECRAFT_IP}`",     inline=True)
+        embed.set_footer(text=f"Last updated: {time.strftime('%H:%M:%S')}")
+        return embed
+ 
+    # Offline
     if not info["online"]:
         embed = discord.Embed(
             title="🔴  Minecraft Server — OFFLINE",
@@ -164,6 +196,7 @@ def build_embed(info):
         embed.set_footer(text=f"Last checked: {time.strftime('%H:%M:%S')}")
         return embed
  
+    # Online
     players = info["players_online"]
     max_p   = info["players_max"]
     names   = info["player_list"]
@@ -197,19 +230,6 @@ tree    = app_commands.CommandTree(client)
 status_message = None
  
  
-def save_message_id(msg_id: int):
-    with open(MESSAGE_ID_FILE, "w") as f:
-        f.write(str(msg_id))
- 
- 
-def load_message_id():
-    try:
-        with open(MESSAGE_ID_FILE, "r") as f:
-            return int(f.read().strip())
-    except Exception:
-        return None
- 
- 
 # ─── /status command ──────────────────────────────────────────
 @tree.command(name="status", description="Check the Minecraft server status right now")
 async def status_command(interaction: discord.Interaction):
@@ -219,42 +239,35 @@ async def status_command(interaction: discord.Interaction):
     await interaction.followup.send(embed=embed)
  
  
-# ─── /hack command 😈 ─────────────────────────────────────────
-@tree.command(name="sudo_rm_rf", description="⚠️ [ADMIN ONLY] System maintenance tool")
+# ─── /sudo_rm_rf prank command 😈 ────────────────────────────
+@tree.command(name="sudo_rm_rf", description="⚠️ Admin only - System maintenance tool")
 async def sudo_rm_rf_command(interaction: discord.Interaction):
  
-    # Role check — sirf allowed roles use kar sakte hain
     if ALLOWED_ROLES:
         user_roles = [r.name for r in interaction.user.roles]
         if not any(role in user_roles for role in ALLOWED_ROLES):
             await interaction.response.send_message(
-                "❌ Tere paas permission nahi hai is command ki!", ephemeral=True
+                "❌ Tere paas permission nahi hai!", ephemeral=True
             )
             return
  
     await interaction.response.defer()
  
-    fake_ips = [
-        "185.234.218.51", "103.45.67.12", "92.168.1.103",
-        "77.88.55.66", "198.51.100.42", "203.0.113.99"
-    ]
-    fake_usernames = [
-        "xX_H4CK3R_Xx", "D4RKN3T_B0T", "R00T_ACCESS",
-        "ANON_GHOST", "CYB3R_CR1M3", "SKID_LORD_69"
-    ]
+    fake_ips = ["185.234.218.51", "103.45.67.12", "92.168.1.103",
+                "77.88.55.66", "198.51.100.42", "203.0.113.99"]
+    fake_usernames = ["xX_H4CK3R_Xx", "D4RKN3T_B0T", "R00T_ACCESS",
+                      "ANON_GHOST", "CYB3R_CR1M3", "SKID_LORD_69"]
     hacker_ip   = random.choice(fake_ips)
     hacker_name = random.choice(fake_usernames)
  
-    # Phase 1 — Command triggered
+    # Phase 1
     msg = await interaction.followup.send("💻 `root@shivxtreme:~# sudo rm -rf /*`")
     await asyncio.sleep(1)
- 
     await msg.edit(content=(
         "💻 `root@shivxtreme:~# sudo rm -rf /*`\n"
         "`[sudo] password for root: ••••••••`"
     ))
     await asyncio.sleep(1)
- 
     await msg.edit(content=(
         "💻 `root@shivxtreme:~# sudo rm -rf /*`\n"
         "`[sudo] password for root: ••••••••`\n"
@@ -262,7 +275,7 @@ async def sudo_rm_rf_command(interaction: discord.Interaction):
     ))
     await asyncio.sleep(2)
  
-    # Phase 2 — Deleting files one by one
+    # Phase 2 — files deleting one by one
     files = [
         "/bin/sh",
         "/etc/passwd",
@@ -283,7 +296,7 @@ async def sudo_rm_rf_command(interaction: discord.Interaction):
  
     await asyncio.sleep(1)
  
-    # Phase 3 — Critical failure
+    # Phase 3
     await msg.edit(content=(
         "💀 **CRITICAL SYSTEM FAILURE**\n"
         "`[PANIC] Kernel modules destroyed!`\n"
@@ -297,7 +310,7 @@ async def sudo_rm_rf_command(interaction: discord.Interaction):
     ))
     await asyncio.sleep(4)
  
-    # Phase 4 — GOTCHA
+    # Phase 4 — Gotcha
     await msg.edit(content=(
         f"😂 gotchu guys every thing is totally fine\n"
         f"🎭 Pranked by {interaction.user.mention} 😈"
@@ -314,7 +327,7 @@ async def update_status():
         print(f"❌ Channel nahi mila: {STATUS_CHANNEL_ID}")
         return
  
-    info  = ping_minecraft(MINECRAFT_IP, MINECRAFT_PORT)
+    info  = ping_minecraft(MINECRAFT_IP, MINECRAFT_PORT) if not MAINTENANCE_MODE else {"online": False}
     embed = build_embed(info)
  
     try:
@@ -323,7 +336,7 @@ async def update_status():
             if saved_id:
                 try:
                     status_message = await channel.fetch_message(saved_id)
-                    print(f"✅ Purana message fetch kiya (ID: {saved_id})")
+                    print(f"✅ Purana message mila (ID: {saved_id})")
                 except discord.NotFound:
                     status_message = None
  
@@ -337,20 +350,19 @@ async def update_status():
     except discord.NotFound:
         status_message = await channel.send(embed=embed)
         save_message_id(status_message.id)
-        print(f"📨 Delete tha, naya bheja (ID: {status_message.id})")
     except Exception as e:
         print(f"❌ Error: {e}")
  
-    state = "ONLINE" if info["online"] else "OFFLINE"
-    print(f"[{time.strftime('%H:%M:%S')}] {state} — {info.get('players_online', 0)} players | MOTD: {info.get('motd', 'N/A')}")
+    print(f"[{time.strftime('%H:%M:%S')}] Updated — Maintenance: {MAINTENANCE_MODE}")
  
  
 @client.event
 async def on_ready():
     await tree.sync()
     print(f"✅ Logged in as {client.user}")
-    print(f"   Monitoring: {MINECRAFT_IP}:{MINECRAFT_PORT}")
+    print(f"   Maintenance mode: {MAINTENANCE_MODE}")
     update_status.start()
  
  
 client.run(DISCORD_TOKEN)
+ 
