@@ -13,7 +13,7 @@ import random
 # ============================================================
 #   EDIT THESE
 # ============================================================
-MINECRAFT_IP      = "play.shivxtreme.fun"
+MINECRAFT_IP      = "play.shivxtreme.fun:19132"
 MINECRAFT_PORT    = 19132
 DISCORD_TOKEN     = os.environ.get("DISCORD_TOKEN")
 STATUS_CHANNEL_ID = 1439258136278995026
