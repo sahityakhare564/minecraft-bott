@@ -335,12 +335,10 @@ async def update_status():
  
 @client.event
 async def on_message(message):
-    # Bot khud ka message ignore kare
-    if message.author == client.user:
+    if message.author.bot:
         return
- 
     if message.content.strip().lower() == "ip":
-        ip_msg = f"🌐 **ShivXtreme SMP IP**\n```{MINECRAFT_IP}```"
+        ip_msg = f"🌐 **ShivXtreme SMP**\n**IP:** `{MINECRAFT_IP}`\n**Port:** `{MINECRAFT_PORT}`"
         await message.reply(ip_msg)
  
 @client.event
