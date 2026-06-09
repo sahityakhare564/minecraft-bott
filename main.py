@@ -340,11 +340,8 @@ async def on_message(message):
         return
  
     if message.content.strip().lower() == "ip":
-        await message.reply(
-            f"🌐 **ShivXtreme SMP IP**
-"
-            f"```{MINECRAFT_IP}```"
-        )
+        ip_msg = f"🌐 **ShivXtreme SMP IP**\n```{MINECRAFT_IP}```"
+        await message.reply(ip_msg)
  
 @client.event
 async def on_ready():
