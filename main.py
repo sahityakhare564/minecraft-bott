@@ -179,7 +179,7 @@ def build_embed(info):
     embed = discord.Embed(
         title="🟢  Minecraft Server — ONLINE",
         description=f"`{MINECRAFT_IP}:{MINECRAFT_PORT}`",
-        color=discord.Color.red(),
+        color=discord.Color.green(),
     )
     embed.add_field(name="👥 Players", value=f"**{players} / {max_p}**", inline=True)
 
