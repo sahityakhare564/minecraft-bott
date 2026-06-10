@@ -179,7 +179,7 @@ def build_embed(info):
     embed = discord.Embed(
         title="🟢  Minecraft Server — ONLINE",
         description=f"`{MINECRAFT_IP}:{MINECRAFT_PORT}`",
-        color=discord.Color.green(),
+        color=discord.Color.red(),
     )
     embed.add_field(name="👥 Players", value=f"**{players} / {max_p}**", inline=True)
 
@@ -333,13 +333,56 @@ async def update_status():
     print(f"[{time.strftime('%H:%M:%S')}] {state} — {info.get('players_online', 0)} players")
 
 
+# ─── Auto Reply Config ────────────────────────────────────────
+GREETINGS = ["hello", "hi", "hey", "hii", "helo", "heyy"]
+
+BAD_WORDS = [
+    # English
+    "fuck", "shit", "bitch", "asshole", "bastard", "dick",
+    "cunt", "whore", "slut", "damn", "ass", "piss",
+    "fucker", "motherfucker", "fck", "fuk", "sh1t",
+    # Hindi/Hinglish
+    "chutiya", "madarchod", "behenchod", "saala", "harami",
+    "randi", "gandu", "bhosdike", "mc", "bc", "maderchod",
+    "bhosdi", "lauda", "lund", "gaand", "chut", "bakrichod",
+    "teri maa", "teri behen", "sala", "sali", "haramzada",
+    "haramzadi", "kutte", "kamine", "kamini", "ullu",
+]
+
+GREETING_REPLIES = [
+    "Hello {name}! 👋 Welcome to ShivXtreme SMP!",
+    "Hey {name}! 😄 Kya haal hai?",
+    "Hi {name}! 🎮 Ready to play?",
+    "Heyyy {name}! 👾 ShivXtreme me aapka swagat hai!",
+]
+
+
 @client.event
 async def on_message(message):
     if message.author.bot:
         return
-    if message.content.strip().lower() == "ip":
+
+    msg = message.content.strip().lower()
+
+    # ── IP reply ──────────────────────────────────────────────
+    if msg == "ip":
         ip_msg = f"🌐 **ShivXtreme SMP**\n**IP:** `{MINECRAFT_IP}`\n**Port:** `{MINECRAFT_PORT}`"
         await message.reply(ip_msg)
+        return
+
+    # ── Greeting reply ────────────────────────────────────────
+    if msg in GREETINGS:
+        reply = random.choice(GREETING_REPLIES).format(name=message.author.mention)
+        await message.reply(reply)
+        return
+
+    # ── Bad word warning ──────────────────────────────────────
+    if any(word in msg for word in BAD_WORDS):
+        await message.reply(
+            f"⚠️ {message.author.mention} Please keep the chat clean! "
+            f"Bad language is not allowed in ShivXtreme SMP. 🙏"
+        )
+        return
 
 @client.event
 async def on_ready():
