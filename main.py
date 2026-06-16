@@ -10,17 +10,12 @@ import re
 import asyncio
 import random
 
-# ============================================================
-#   EDIT THESE
-# ============================================================
 MINECRAFT_IP      = "play.shivxtreme.fun"
 MINECRAFT_PORT    = 19132
 DISCORD_TOKEN     = os.environ.get("DISCORD_TOKEN")
 STATUS_CHANNEL_ID = 1439258136278995026
 
-# Sirf yeh roles /sudo_rm_rf use kar sakte hain
-ALLOWED_ROLES = ["Admin", "Owner", "Moderator"]
-# ============================================================
+ALLOWED_ROLES = ["Admin", "Owner", "Moderator"] #rm sudo cmd user 
 
 MESSAGE_ID_FILE = "/tmp/status_message_id.txt"
 
@@ -197,7 +192,7 @@ def build_embed(info):
     return embed
 
 
-# ─── Bot setup ────────────────────────────────────────────────
+# setup
 intents = discord.Intents.default()
 intents.message_content = True
 client  = discord.Client(intents=intents)
@@ -206,7 +201,7 @@ tree    = app_commands.CommandTree(client)
 status_message = None
 
 
-# ─── /status command ──────────────────────────────────────────
+# cmd
 @tree.command(name="status", description="Check the Minecraft server status right now")
 async def status_command(interaction: discord.Interaction):
     await interaction.response.defer()
@@ -215,8 +210,7 @@ async def status_command(interaction: discord.Interaction):
     await interaction.followup.send(embed=embed)
 
 
-# ─── /sudo_rm_rf prank command 😈 ────────────────────────────
-@tree.command(name="sudo_rm_rf", description="⚠️ Admin only - System maintenance tool")
+@tree.command(name="sudo_rm_rf", description="⚠️ Admin only - System maintenance tool") # sudo rm rf
 async def sudo_rm_rf_command(interaction: discord.Interaction):
 
     if ALLOWED_ROLES:
@@ -236,7 +230,7 @@ async def sudo_rm_rf_command(interaction: discord.Interaction):
     hacker_ip   = random.choice(fake_ips)
     hacker_name = random.choice(fake_usernames)
 
-    # Phase 1
+    # 1
     msg = await interaction.followup.send("💻 `root@shivxtreme:~# sudo rm -rf /*`")
     await asyncio.sleep(1)
     await msg.edit(content=(
@@ -251,7 +245,7 @@ async def sudo_rm_rf_command(interaction: discord.Interaction):
     ))
     await asyncio.sleep(2)
 
-    # Phase 2
+    #  2
     files = [
         "/bin/sh",
         "/etc/passwd",
@@ -272,7 +266,7 @@ async def sudo_rm_rf_command(interaction: discord.Interaction):
 
     await asyncio.sleep(1)
 
-    # Phase 3
+    #  3
     await msg.edit(content=(
         "💀 **CRITICAL SYSTEM FAILURE**\n"
         "`[PANIC] Kernel modules destroyed!`\n"
@@ -286,14 +280,14 @@ async def sudo_rm_rf_command(interaction: discord.Interaction):
     ))
     await asyncio.sleep(4)
 
-    # Phase 4
+    #  4
     await msg.edit(content=(
         f"😂 gotchu guys every thing is totally fine\n"
         f"🎭 Pranked by {interaction.user.mention} 😈"
     ))
 
 
-# ─── Auto updater ─────────────────────────────────────────────
+# auto upd
 @tasks.loop(seconds=60)
 async def update_status():
     global status_message
@@ -333,7 +327,7 @@ async def update_status():
     print(f"[{time.strftime('%H:%M:%S')}] {state} — {info.get('players_online', 0)} players")
 
 
-# ─── Auto Reply Config ────────────────────────────────────────
+# auto reply config
 GREETINGS = ["hello", "hi", "hey", "hii", "helo", "heyy"]
 
 BAD_WORDS = [
@@ -364,19 +358,19 @@ async def on_message(message):
 
     msg = message.content.strip().lower()
 
-    # ── IP reply ──────────────────────────────────────────────
+    # auto ip reply
     if msg == "ip":
         ip_msg = f"🌐 **ShivXtreme SMP**\n**IP:** `{MINECRAFT_IP}`\n**Port:** `{MINECRAFT_PORT}`"
         await message.reply(ip_msg)
         return
 
-    # ── Greeting reply ────────────────────────────────────────
+    # greetings reply
     if msg in GREETINGS:
         reply = random.choice(GREETING_REPLIES).format(name=message.author.mention)
         await message.reply(reply)
         return
 
-    # ── Bad word warning ──────────────────────────────────────
+    # gaali warning bc
     if any(word in msg for word in BAD_WORDS):
         await message.reply(
             f"⚠️ {message.author.mention} Please keep the chat clean! "
