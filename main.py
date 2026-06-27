@@ -10,12 +10,17 @@ import re
 import asyncio
 import random
 
+# ============================================================
+#   EDIT THESE
+# ============================================================
 MINECRAFT_IP      = "play.shivxtreme.fun"
 MINECRAFT_PORT    = 19132
 DISCORD_TOKEN     = os.environ.get("DISCORD_TOKEN")
 STATUS_CHANNEL_ID = 1439258136278995026
 
-ALLOWED_ROLES = ["Admin", "Owner", "Moderator"] #rm sudo cmd user 
+# Sirf yeh roles /sudo_rm_rf use kar sakte hain
+ALLOWED_ROLES = ["Admin", "Owner", "Moderator"]
+# ============================================================
 
 MESSAGE_ID_FILE = "/tmp/status_message_id.txt"
 
@@ -160,39 +165,63 @@ def ping_minecraft(host, port, timeout=5):
 def build_embed(info):
     if not info["online"]:
         embed = discord.Embed(
-            title="🔴  Minecraft Server — OFFLINE",
+            title="🔴  SERVER OFFLINE",
             description=f"`{MINECRAFT_IP}:{MINECRAFT_PORT}`",
-            color=discord.Color.red(),
+            color=0xFF0000,
         )
-        embed.set_footer(text=f"Last checked: {time.strftime('%H:%M:%S')}")
+        embed.set_footer(text=f"Last checked: {time.strftime('%H:%M:%S')} • Powered by Lockc")
         return embed
 
     players = info["players_online"]
     max_p   = info["players_max"]
     names   = info["player_list"]
 
-    embed = discord.Embed(
-        title="🟢  Minecraft Server — ONLINE",
-        description=f"`{MINECRAFT_IP}:{MINECRAFT_PORT}`",
-        color=discord.Color.red(),
-    )
-    embed.add_field(name="👥 Players", value=f"**{players} / {max_p}**", inline=True)
-
-    if names:
-        embed.add_field(name="🧍 Online Now", value="\n".join(f"• {n}" for n in names), inline=True)
-    elif players > 0:
-        embed.add_field(name="🧍 Online Now", value=f"{players} player(s) (names hidden)", inline=True)
+    # Progress bar
+    if max_p > 0:
+        filled = int((players / max_p) * 10)
+        bar = "█" * filled + "░" * (10 - filled)
+        player_field = f"**{players} / {max_p}**\n`{bar}`"
     else:
-        embed.add_field(name="🧍 Online Now", value="Nobody online yet", inline=True)
+        player_field = f"**{players}**"
 
+    embed = discord.Embed(
+        title="🟢  SERVER ONLINE",
+        description=f"`{MINECRAFT_IP}:{MINECRAFT_PORT}`",
+        color=0x00FF88,
+    )
+
+    embed.add_field(name="👥 Players Online", value=player_field, inline=True)
+
+    # Server info
+    info_text = (
+        "`⚡` Version: **1.21+**\n"
+        "`🖥️` Platform: **Paper**\n"
+        "`🔄` Updates: **60 sec**"
+    )
+    embed.add_field(name="⚡ Server Info", value=info_text, inline=True)
+
+    embed.add_field(name="\u200b", value="\u200b", inline=False)
+
+    # MOTD
     if info["motd"]:
-        embed.add_field(name="📋 MOTD", value=info["motd"], inline=False)
+        embed.add_field(name="📜 Server MOTD", value=f"```{info['motd']}```", inline=False)
 
-    embed.set_footer(text=f"Updates every 60 sec • Last checked: {time.strftime('%H:%M:%S')}")
+    # Players
+    if names:
+        player_list = "\n".join(f"🟢 `{n}`" for n in names[:15])
+        if len(names) > 15:
+            player_list += f"\n*+{len(names)-15} more players*"
+        embed.add_field(name="👤 Online Players", value=player_list, inline=False)
+    elif players > 0:
+        embed.add_field(name="👤 Online Players", value=f"*{players} player(s) online*", inline=False)
+    else:
+        embed.add_field(name="👤 Online Players", value="*Nobody online yet*", inline=False)
+
+    embed.set_footer(text=f"Last checked: {time.strftime('%H:%M:%S')} • Powered by Lockc")
     return embed
 
 
-# setup
+# ─── Bot setup ────────────────────────────────────────────────
 intents = discord.Intents.default()
 intents.message_content = True
 client  = discord.Client(intents=intents)
@@ -201,7 +230,7 @@ tree    = app_commands.CommandTree(client)
 status_message = None
 
 
-# cmd
+# ─── /status command ──────────────────────────────────────────
 @tree.command(name="status", description="Check the Minecraft server status right now")
 async def status_command(interaction: discord.Interaction):
     await interaction.response.defer()
@@ -210,7 +239,8 @@ async def status_command(interaction: discord.Interaction):
     await interaction.followup.send(embed=embed)
 
 
-@tree.command(name="sudo_rm_rf", description="⚠️ Admin only - System maintenance tool") # sudo rm rf
+# ─── /sudo_rm_rf prank command 😈 ────────────────────────────
+@tree.command(name="sudo_rm_rf", description="⚠️ Admin only - System maintenance tool")
 async def sudo_rm_rf_command(interaction: discord.Interaction):
 
     if ALLOWED_ROLES:
@@ -230,7 +260,7 @@ async def sudo_rm_rf_command(interaction: discord.Interaction):
     hacker_ip   = random.choice(fake_ips)
     hacker_name = random.choice(fake_usernames)
 
-    # 1
+    # Phase 1
     msg = await interaction.followup.send("💻 `root@shivxtreme:~# sudo rm -rf /*`")
     await asyncio.sleep(1)
     await msg.edit(content=(
@@ -245,7 +275,7 @@ async def sudo_rm_rf_command(interaction: discord.Interaction):
     ))
     await asyncio.sleep(2)
 
-    #  2
+    # Phase 2
     files = [
         "/bin/sh",
         "/etc/passwd",
@@ -266,7 +296,7 @@ async def sudo_rm_rf_command(interaction: discord.Interaction):
 
     await asyncio.sleep(1)
 
-    #  3
+    # Phase 3
     await msg.edit(content=(
         "💀 **CRITICAL SYSTEM FAILURE**\n"
         "`[PANIC] Kernel modules destroyed!`\n"
@@ -280,14 +310,14 @@ async def sudo_rm_rf_command(interaction: discord.Interaction):
     ))
     await asyncio.sleep(4)
 
-    #  4
+    # Phase 4
     await msg.edit(content=(
         f"😂 gotchu guys every thing is totally fine\n"
         f"🎭 Pranked by {interaction.user.mention} 😈"
     ))
 
 
-# auto upd
+# ─── Auto updater ─────────────────────────────────────────────
 @tasks.loop(seconds=60)
 async def update_status():
     global status_message
@@ -327,7 +357,7 @@ async def update_status():
     print(f"[{time.strftime('%H:%M:%S')}] {state} — {info.get('players_online', 0)} players")
 
 
-# auto reply config
+# ─── Auto Reply Config ────────────────────────────────────────
 GREETINGS = ["hello", "hi", "hey", "hii", "helo", "heyy"]
 
 BAD_WORDS = [
@@ -358,19 +388,19 @@ async def on_message(message):
 
     msg = message.content.strip().lower()
 
-    # auto ip reply
+    # ── IP reply ──────────────────────────────────────────────
     if msg == "ip":
         ip_msg = f"🌐 **ShivXtreme SMP**\n**IP:** `{MINECRAFT_IP}`\n**Port:** `{MINECRAFT_PORT}`"
         await message.reply(ip_msg)
         return
 
-    # greetings reply
+    # ── Greeting reply ────────────────────────────────────────
     if msg in GREETINGS:
         reply = random.choice(GREETING_REPLIES).format(name=message.author.mention)
         await message.reply(reply)
         return
 
-    # gaali warning bc
+    # ── Bad word warning ──────────────────────────────────────
     if any(word in msg for word in BAD_WORDS):
         await message.reply(
             f"⚠️ {message.author.mention} Please keep the chat clean! "
