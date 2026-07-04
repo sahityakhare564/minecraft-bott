@@ -388,12 +388,19 @@ async def on_message(message):
         await message.reply(reply)
         return
 
-    # ── $link — message bhejo aur original delete karo ────────
+    # ── $link — sirf allowed users use kar sakte hain ──────────
     if msg_lower.startswith("$link"):
-        link_msg = msg[5:].strip()  # $link ke baad ka text
+        ALLOWED_USER_IDS = [
+            955503311182790726,
+            919913690252320778,
+            1029372920323113011,
+        ]
+        if message.author.id not in ALLOWED_USER_IDS:
+            return  # silently ignore karo
+        link_msg = msg[5:].strip()
         if link_msg:
             try:
-                await message.delete()  # original message delete
+                await message.delete()
             except discord.Forbidden:
                 pass
             await message.channel.send(link_msg)
