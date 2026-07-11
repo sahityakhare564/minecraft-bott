@@ -357,17 +357,6 @@ async def update_status():
     print(f"[{time.strftime('%H:%M:%S')}] {state} — {info.get('players_online', 0)} players")
 
 
-# ─── Auto Reply Config ────────────────────────────────────────
-GREETINGS = ["hello", "hi", "hey", "hii", "helo", "heyy"]
-
-GREETING_REPLIES = [
-    "Hello {name}! 👋 Welcome to ShivXtreme SMP!",
-    "Hey {name}! 😄 Kya haal hai?",
-    "Hi {name}! 🎮 Ready to play?",
-    "Heyyy {name}! 👾 ShivXtreme me aapka swagat hai!",
-]
-
-
 @client.event
 async def on_message(message):
     if message.author.bot:
@@ -380,12 +369,6 @@ async def on_message(message):
     if msg_lower == "ip":
         ip_msg = f"🌐 **ShivXtreme SMP**\n**IP:** `{MINECRAFT_IP}`\n**Port:** `{MINECRAFT_PORT}`"
         await message.reply(ip_msg)
-        return
-
-    # ── Greeting reply ────────────────────────────────────────
-    if msg_lower in GREETINGS:
-        reply = random.choice(GREETING_REPLIES).format(name=message.author.mention)
-        await message.reply(reply)
         return
 
     # ── $link — sirf allowed users use kar sakte hain ──────────
