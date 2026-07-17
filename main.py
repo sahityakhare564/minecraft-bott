@@ -367,7 +367,15 @@ async def on_message(message):
 
     # ── IP reply ──────────────────────────────────────────────
     if msg_lower == "ip":
-        ip_msg = f"🌐 **ShivXtreme SMP**\n**IP:** `{MINECRAFT_IP}`\n**Port:** `{MINECRAFT_PORT}`"
+        ip_msg = (
+            "🌐 **ShivXtreme SMP — Server IPs**\n\n"
+            "☕ **JAVA EDITION**\n"
+            "> IP: `play.shivxtreme.fun`\n"
+            "> Port: `25565`\n\n"
+            "📱 **POCKET EDITION (Bedrock)**\n"
+            "> IP: `pe.shivxtreme.fun`\n"
+            "> Port: `19132`"
+        )
         await message.reply(ip_msg)
         return
 
