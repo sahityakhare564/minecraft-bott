@@ -254,10 +254,10 @@ async def toggle_status(interaction: discord.Interaction, mode: app_commands.Cho
 
     if mode.value == "on":
         status_enabled = True
-        await interaction.response.send_message("✅ Status **ON** kar diya!", ephemeral=True)
+        await interaction.response.send_message("✅ Turned **ON** the status system!", ephemeral=True)
     else:
         status_enabled = False
-        await interaction.response.send_message("🔴 Status **OFF** kar diya!", ephemeral=True)
+        await interaction.response.send_message("🔴 Turned **OFF** the status system!", ephemeral=True)
 
 
 # ─── Auto updater ─────────────────────────────────────────────
