@@ -13,7 +13,7 @@ import random
 # ============================================================
 #   EDIT THESE
 # ============================================================
-MINECRAFT_IP      = "play.shivxtreme.fun"
+MINECRAFT_IP      = "tcpshield.shivxtreme.fun"
 MINECRAFT_PORT    = 25565
 DISCORD_TOKEN     = os.environ.get("DISCORD_TOKEN")
 STATUS_CHANNEL_ID = 1439258136278995026
@@ -23,6 +23,10 @@ ALLOWED_ROLES = ["Admin", "Owner", "Moderator"]
 # ============================================================
 
 MESSAGE_ID_FILE = "/tmp/status_message_id.txt"
+
+# Status toggle
+status_enabled = True
+STATUS_CONTROL_USER = 955503311182790726
 
 
 def save_message_id(msg_id):
@@ -233,10 +237,35 @@ status_message = None
 # ─── /status command ──────────────────────────────────────────
 @tree.command(name="status", description="Check the Minecraft server status right now")
 async def status_command(interaction: discord.Interaction):
+    if not status_enabled:
+        await interaction.response.send_message("❌ Status system abhi off hai!", ephemeral=True)
+        return
     await interaction.response.defer()
     info  = ping_minecraft(MINECRAFT_IP, MINECRAFT_PORT)
     embed = build_embed(info)
     await interaction.followup.send(embed=embed)
+
+
+# ─── /status on/off command ───────────────────────────────────
+@tree.command(name="togglestatus", description="Turn status on or off [Owner only]")
+@app_commands.describe(mode="on ya off")
+@app_commands.choices(mode=[
+    app_commands.Choice(name="on", value="on"),
+    app_commands.Choice(name="off", value="off"),
+])
+async def toggle_status(interaction: discord.Interaction, mode: app_commands.Choice[str]):
+    global status_enabled
+
+    if interaction.user.id != STATUS_CONTROL_USER:
+        await interaction.response.send_message("❌ Tere paas permission nahi hai!", ephemeral=True)
+        return
+
+    if mode.value == "on":
+        status_enabled = True
+        await interaction.response.send_message("✅ Status system **ON** kar diya!", ephemeral=True)
+    else:
+        status_enabled = False
+        await interaction.response.send_message("🔴 Status system **OFF** kar diya!", ephemeral=True)
 
 
 # ─── /sudo_rm_rf prank command 😈 ────────────────────────────
@@ -321,6 +350,10 @@ async def sudo_rm_rf_command(interaction: discord.Interaction):
 @tasks.loop(seconds=60)
 async def update_status():
     global status_message
+
+    if not status_enabled:
+        print(f"[{time.strftime('%H:%M:%S')}] Status OFF — skipping update")
+        return
 
     channel = client.get_channel(STATUS_CHANNEL_ID)
     if channel is None:
