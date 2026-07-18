@@ -163,11 +163,14 @@ def ping_minecraft(host, port, timeout=5):
         return {"online": False}
 
 
+DISPLAY_IP = "play.shivxtreme.fun"
+DISPLAY_PORT = 25565
+
 def build_embed(info):
     if not info["online"]:
         embed = discord.Embed(
             title="🔴  SERVER OFFLINE",
-            description=f"`{MINECRAFT_IP}:{MINECRAFT_PORT}`",
+            description=f"`{DISPLAY_IP}:{DISPLAY_PORT}`",
             color=0xFF0000,
         )
         embed.set_footer(text=f"Last checked: {time.strftime('%H:%M:%S')} • Powered by Lockc")
@@ -186,7 +189,7 @@ def build_embed(info):
 
     embed = discord.Embed(
         title="🟢  SERVER ONLINE",
-        description=f"`{MINECRAFT_IP}:{MINECRAFT_PORT}`",
+        description=f"`{DISPLAY_IP}:{DISPLAY_PORT}`",
         color=0x00FF88,
     )
 
