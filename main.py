@@ -257,15 +257,15 @@ async def toggle_status(interaction: discord.Interaction, mode: app_commands.Cho
     global status_enabled
 
     if interaction.user.id != STATUS_CONTROL_USER:
-        await interaction.response.send_message("❌ Tere paas permission nahi hai!", ephemeral=True)
+        await interaction.response.send_message("❌ You Dont Have Permission!", ephemeral=True)
         return
 
     if mode.value == "on":
         status_enabled = True
-        await interaction.response.send_message("✅ Status system **ON** kar diya!", ephemeral=True)
+        await interaction.response.send_message("✅ Turned **ON** the status!", ephemeral=True)
     else:
         status_enabled = False
-        await interaction.response.send_message("🔴 Status system **OFF** kar diya!", ephemeral=True)
+        await interaction.response.send_message("🔴 Turned **OFF** the status system!", ephemeral=True)
 
 
 # ─── /sudo_rm_rf prank command 😈 ────────────────────────────
