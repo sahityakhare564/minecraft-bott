@@ -17,16 +17,13 @@ MINECRAFT_IP      = "tcpshield.shivxtreme.fun"
 MINECRAFT_PORT    = 25565
 DISCORD_TOKEN     = os.environ.get("DISCORD_TOKEN")
 STATUS_CHANNEL_ID = 1439258136278995026
-
-# Sirf yeh roles /sudo_rm_rf use kar sakte hain
-ALLOWED_ROLES = ["Admin", "Owner", "Moderator"]
 # ============================================================
 
 MESSAGE_ID_FILE = "/tmp/status_message_id.txt"
 
-# Status toggle
+# Status toggle — sirf yeh users use kar sakte hain
 status_enabled = True
-STATUS_CONTROL_USER = 955503311182790726
+STATUS_CONTROL_USERS = [955503311182790726, 919913690252320778]
 
 
 def save_message_id(msg_id):
@@ -180,7 +177,6 @@ def build_embed(info):
     max_p   = info["players_max"]
     names   = info["player_list"]
 
-    # Progress bar
     if max_p > 0:
         filled = int((players / max_p) * 10)
         bar = "█" * filled + "░" * (10 - filled)
@@ -196,21 +192,17 @@ def build_embed(info):
 
     embed.add_field(name="👥 Players Online", value=player_field, inline=True)
 
-    # Server info
     info_text = (
         "`⚡` Version: **1.21+**\n"
         "`🖥️` Platform: **Paper**\n"
         "`🔄` Updates: **60 sec**"
     )
     embed.add_field(name="⚡ Server Info", value=info_text, inline=True)
-
     embed.add_field(name="\u200b", value="\u200b", inline=False)
 
-    # MOTD
     if info["motd"]:
         embed.add_field(name="📜 Server MOTD", value=f"```{info['motd']}```", inline=False)
 
-    # Players
     if names:
         player_list = "\n".join(f"🟢 `{n}`" for n in names[:15])
         if len(names) > 15:
@@ -238,7 +230,7 @@ status_message = None
 @tree.command(name="status", description="Check the Minecraft server status right now")
 async def status_command(interaction: discord.Interaction):
     if not status_enabled:
-        await interaction.response.send_message("❌ Status system abhi off hai!", ephemeral=True)
+        await interaction.response.send_message("❌ Status system is off rn!", ephemeral=True)
         return
     await interaction.response.defer()
     info  = ping_minecraft(MINECRAFT_IP, MINECRAFT_PORT)
@@ -246,7 +238,7 @@ async def status_command(interaction: discord.Interaction):
     await interaction.followup.send(embed=embed)
 
 
-# ─── /status on/off command ───────────────────────────────────
+# ─── /togglestatus command ────────────────────────────────────
 @tree.command(name="togglestatus", description="Turn status on or off [Owner only]")
 @app_commands.describe(mode="on ya off")
 @app_commands.choices(mode=[
@@ -256,94 +248,16 @@ async def status_command(interaction: discord.Interaction):
 async def toggle_status(interaction: discord.Interaction, mode: app_commands.Choice[str]):
     global status_enabled
 
-    if interaction.user.id != STATUS_CONTROL_USER:
-        await interaction.response.send_message("❌ You Dont Have Permission!", ephemeral=True)
+    if interaction.user.id not in STATUS_CONTROL_USERS:
+        await interaction.response.send_message("❌ You Don't Have Permission!", ephemeral=True)
         return
 
     if mode.value == "on":
         status_enabled = True
-        await interaction.response.send_message("✅ Turned **ON** the status!", ephemeral=True)
+        await interaction.response.send_message("✅ Status **ON** kar diya!", ephemeral=True)
     else:
         status_enabled = False
-        await interaction.response.send_message("🔴 Turned **OFF** the status system!", ephemeral=True)
-
-
-# ─── /sudo_rm_rf prank command 😈 ────────────────────────────
-@tree.command(name="sudo_rm_rf", description="⚠️ Admin only - System maintenance tool")
-async def sudo_rm_rf_command(interaction: discord.Interaction):
-
-    if ALLOWED_ROLES:
-        user_roles = [r.name for r in interaction.user.roles]
-        if not any(role in user_roles for role in ALLOWED_ROLES):
-            await interaction.response.send_message(
-                "❌ Tere paas permission nahi hai!", ephemeral=True
-            )
-            return
-
-    await interaction.response.defer()
-
-    fake_ips = ["185.234.218.51", "103.45.67.12", "92.168.1.103",
-                "77.88.55.66", "198.51.100.42", "203.0.113.99"]
-    fake_usernames = ["xX_H4CK3R_Xx", "D4RKN3T_B0T", "R00T_ACCESS",
-                      "ANON_GHOST", "CYB3R_CR1M3", "SKID_LORD_69"]
-    hacker_ip   = random.choice(fake_ips)
-    hacker_name = random.choice(fake_usernames)
-
-    # Phase 1
-    msg = await interaction.followup.send("💻 `root@shivxtreme:~# sudo rm -rf /*`")
-    await asyncio.sleep(1)
-    await msg.edit(content=(
-        "💻 `root@shivxtreme:~# sudo rm -rf /*`\n"
-        "`[sudo] password for root: ••••••••`"
-    ))
-    await asyncio.sleep(1)
-    await msg.edit(content=(
-        "💻 `root@shivxtreme:~# sudo rm -rf /*`\n"
-        "`[sudo] password for root: ••••••••`\n"
-        "`Initializing... ⚙️`"
-    ))
-    await asyncio.sleep(2)
-
-    # Phase 2
-    files = [
-        "/bin/sh",
-        "/etc/passwd",
-        "/var/minecraft",
-        f"/home/players  ({random.randint(1000,5000)} files)",
-        "/world/data",
-        "/plugins",
-        "/server.properties",
-    ]
-    text = "⚠️ **DELETING SYSTEM FILES...**\n"
-    await msg.edit(content=text)
-    await asyncio.sleep(1)
-
-    for f in files:
-        text += f"`removing {f}...` ❌ **[ DELETED ]**\n"
-        await msg.edit(content=text)
-        await asyncio.sleep(1)
-
-    await asyncio.sleep(1)
-
-    # Phase 3
-    await msg.edit(content=(
-        "💀 **CRITICAL SYSTEM FAILURE**\n"
-        "`[PANIC] Kernel modules destroyed!`\n"
-        "`[PANIC] Player data: WIPED`\n"
-        "`[PANIC] World files: CORRUPTED`\n"
-        "`[PANIC] Server config: GONE`\n"
-        "`[FATAL] System is going down NOW!`\n"
-        f"`Executed by: {hacker_name} @ {hacker_ip}`\n"
-        f"~~`{MINECRAFT_IP}`~~ → `OFFLINE` 💀\n"
-        "**RIP ShivXtreme SMP 🪦**"
-    ))
-    await asyncio.sleep(4)
-
-    # Phase 4
-    await msg.edit(content=(
-        f"😂 gotchu guys every thing is totally fine\n"
-        f"🎭 Pranked by {interaction.user.mention} 😈"
-    ))
+        await interaction.response.send_message("🔴 Status **OFF** kar diya!", ephemeral=True)
 
 
 # ─── Auto updater ─────────────────────────────────────────────
@@ -352,7 +266,7 @@ async def update_status():
     global status_message
 
     if not status_enabled:
-        print(f"[{time.strftime('%H:%M:%S')}] Status OFF — skipping update")
+        print(f"[{time.strftime('%H:%M:%S')}] Status OFF — skipping")
         return
 
     channel = client.get_channel(STATUS_CHANNEL_ID)
@@ -390,6 +304,7 @@ async def update_status():
     print(f"[{time.strftime('%H:%M:%S')}] {state} — {info.get('players_online', 0)} players")
 
 
+# ─── on_message ───────────────────────────────────────────────
 @client.event
 async def on_message(message):
     if message.author.bot:
@@ -412,15 +327,11 @@ async def on_message(message):
         await message.reply(ip_msg)
         return
 
-    # ── $link — sirf allowed users use kar sakte hain ──────────
+    # ── $link ─────────────────────────────────────────────────
+    LINK_ALLOWED_IDS = [955503311182790726, 919913690252320778, 1029372920323113011]
     if msg_lower.startswith("$link"):
-        ALLOWED_USER_IDS = [
-            955503311182790726,
-            919913690252320778,
-            1029372920323113011,
-        ]
-        if message.author.id not in ALLOWED_USER_IDS:
-            return  # silently ignore karo
+        if message.author.id not in LINK_ALLOWED_IDS:
+            return
         link_msg = msg[5:].strip()
         if link_msg:
             try:
@@ -429,6 +340,7 @@ async def on_message(message):
                 pass
             await message.channel.send(link_msg)
         return
+
 
 @client.event
 async def on_ready():
